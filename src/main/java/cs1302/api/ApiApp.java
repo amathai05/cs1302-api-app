@@ -9,6 +9,10 @@ import javafx.scene.layout.VBox;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
 
+import cs1302.api.TopBar;
+import cs1302.api.Translator;
+import javafx.scene.control.TextField;
+
 /**
  * REPLACE WITH NON-SHOUTING DESCRIPTION OF YOUR APP.
  */
@@ -17,12 +21,22 @@ public class ApiApp extends Application {
     Scene scene;
     VBox root;
 
+    TopBar bar;
+    TextField verse;
+    TextField transText;
+    Translator transBox;
+
     /**
      * Constructs an {@code ApiApp} object. This default (i.e., no argument)
      * constructor is executed in Step 2 of the JavaFX Application Life-Cycle.
      */
     public ApiApp() {
         root = new VBox();
+        bar = new TopBar();
+        verse = new TextField();
+        transText = new TextField();
+        transBox = new Translator();
+
     } // ApiApp
 
     /** {@inheritDoc} */
@@ -41,7 +55,7 @@ public class ApiApp extends Application {
         Label notice = new Label("Modify the starter code to suit your needs.");
 
         // setup scene
-        root.getChildren().addAll(banner, notice);
+        root.getChildren().addAll(bar, verse, transBox, transText, banner, notice);
         scene = new Scene(root);
 
         // setup stage
