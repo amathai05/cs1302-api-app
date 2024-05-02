@@ -31,9 +31,14 @@ public class Translator extends HBox {
 
         //combobox
         languages.getItems().addAll(
+            "English",
             "Spanish",
-            "English"
-        );
+            "Chinese",
+            "French",
+            "Hindi",
+            "Arabic",
+            "Spanish"
+            );
 
         //set children
         this.getChildren().addAll(translate, statement, languages);

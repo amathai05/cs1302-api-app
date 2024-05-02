@@ -56,7 +56,8 @@ public class ApiApp extends Application {
     TextField transText;
     Translator transBox;
 
-    BibleResponse res;
+    BibleResponse bRes;
+    TranslatorResponse tRes;
 
     String reference;
     String vers;
@@ -86,9 +87,9 @@ public class ApiApp extends Application {
             reference = bar.getReference();
             retrieveResponse();
 
-            System.out.print(this.res.text);
+            System.out.print(this.bRes.text);
 
-            verse.setText(this.res.text);
+            verse.setText(this.bRes.text);
         });
 
 
@@ -116,7 +117,7 @@ public class ApiApp extends Application {
 
     } // start
 
-    public void retrieveResponse() {
+    public void retrieveBibleResponse() {
         try {
             //form uri
             String term = URLEncoder.encode(reference, StandardCharsets.UTF_8);
@@ -140,11 +141,44 @@ public class ApiApp extends Application {
             System.out.println("********** RAW JSON STRING: **********");
             System.out.println(jsonString.trim());
             // parse the JSON-formatted string using GSON
-            this.res = GSON
+            this.bRes = GSON
                 .fromJson(jsonString, BibleResponse.class);
         } catch (IOException | InterruptedException e) {
             System.out.println("Hi");
         }
     }
+
+
+    public void retrieveTranslatorResponse() {
+        try {
+            //form uri
+            String term = URLEncoder.encode(reference, StandardCharsets.UTF_8);
+            String bibleVersion = URLEncoder.encode(this.vers, StandardCharsets.UTF_8);
+            String query = String.format("?source=en&target=%sTHELANGUAGE&q=&s", asdf, bibleVerse);
+            String uri = BIBLE_API + query;
+
+            System.out.println(uri);
+
+            //build request
+            HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(uri))
+                .build();
+            HttpResponse<String> response = HTTP_CLIENT
+                .send(request, BodyHandlers.ofString());
+            //response code 200
+            if (response.statusCode() != 200) {
+                throw new IOException(response.toString());
+            }
+            String jsonString = response.body();
+            System.out.println("********** RAW JSON STRING: **********");
+            System.out.println(jsonString.trim());
+            // parse the JSON-formatted string using GSON
+            this.bRes = GSON
+                .fromJson(jsonString, BibleResponse.class);
+        } catch (IOException | InterruptedException e) {
+            System.out.println("Hi");
+        }
+    }
+
 
 } // ApiApp
