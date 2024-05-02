@@ -53,4 +53,13 @@ public class TopBar extends HBox {
         return (version.getValue());
     }
 
+    /**
+     * Retrieves Reference.
+     *
+     * @return the text in the search box.
+     */
+    public String getReference() {
+        return (location.getText());
+    }
+
 }
