@@ -166,6 +166,11 @@ public class ApiApp extends Application {
     public void retrieveBibleResponse() {
         try {
             //form uri
+
+            if (reference.equals("") || (reference == null)) {
+                throw new IllegalStateException("Bible reference is empty");
+            }
+
             String term = URLEncoder.encode(reference, StandardCharsets.UTF_8);
             String bibleVersion = URLEncoder.encode(this.vers, StandardCharsets.UTF_8);
             String query = String.format("%s?translation=%s", term, bibleVersion);
