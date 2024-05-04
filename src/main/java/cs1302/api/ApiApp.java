@@ -26,6 +26,7 @@ import java.io.IOException;
 import cs1302.api.TopBar;
 import cs1302.api.Translator;
 import javafx.scene.control.TextField;
+import javafx.scene.control.TextArea;
 
 /**
  * REPLACE WITH NON-SHOUTING DESCRIPTION OF YOUR APP.
@@ -44,16 +45,18 @@ public class ApiApp extends Application {
         .create();                                    // builds and returns a Gson object
 
 
-
     private static final String BIBLE_API = "https://bible-api.com/";
+    private static final String TRANSLATOR_API = "https://libretranslate.com/translate";
+    private static final String KEY = "91d414d0-9d15-4106-8d8d-d3a2c36751e1";
 
     Stage stage;
     Scene scene;
     VBox root;
 
     TopBar bar;
-    TextField verse;
-    TextField transText;
+    TextArea  verse;
+    TextArea transText;
+
     Translator transBox;
 
     BibleResponse bRes;
@@ -71,9 +74,16 @@ public class ApiApp extends Application {
     public ApiApp() {
         root = new VBox();
         bar = new TopBar();
-        verse = new TextField();
 
-        transText = new TextField();
+        verse = new TextArea();
+        verse.setWrapText(true);
+        verse.setPrefHeight(140);
+        verse.setEditable(false);
+
+        transText = new TextArea();
+        transText.setWrapText(true);
+        transText.setEditable(false);
+
         transBox = new Translator();
 
     } // ApiApp
@@ -85,11 +95,26 @@ public class ApiApp extends Application {
         bar.search.setOnAction(event -> {
             vers = bar.getVersion();
             reference = bar.getReference();
-            retrieveResponse();
 
-            System.out.print(this.bRes.text);
+            retrieveBibleResponse();
+
+            bibleVerse = this.bRes.text;
+
+            System.out.println(bibleVerse);
 
             verse.setText(this.bRes.text);
+        });
+
+        transBox.translate.setOnAction(event -> {
+
+            System.out.println(bibleVerse);
+
+            retrieveTranslatorResponse();
+
+            System.out.println(this.tRes.translatedText);
+
+            transText.setText(this.tRes.translatedText);
+
         });
 
 
@@ -102,10 +127,10 @@ public class ApiApp extends Application {
         banner.setFitWidth(640);
 
         // some labels to display information
-        Label notice = new Label("Modify the starter code to suit your needs.");
-
+        Label howToUse = new Label("Enter a reference! Example: \"1 John 3:16\" or \"Psalm 23\"");
+        Label notice = new Label("Thank you to LibreTranslate & bible-api.com!");
         // setup scene
-        root.getChildren().addAll(bar, verse, transBox, transText, banner, notice);
+        root.getChildren().addAll(bar, howToUse, verse, transBox, transText, notice);
         scene = new Scene(root);
 
         // setup stage
@@ -122,7 +147,7 @@ public class ApiApp extends Application {
             //form uri
             String term = URLEncoder.encode(reference, StandardCharsets.UTF_8);
             String bibleVersion = URLEncoder.encode(this.vers, StandardCharsets.UTF_8);
-            String query = String.format("%s?translaton=%s", term, bibleVersion);
+            String query = String.format("%s?translation=%s", term, bibleVersion);
             String uri = BIBLE_API + query;
 
             System.out.println(uri);
@@ -151,17 +176,38 @@ public class ApiApp extends Application {
 
     public void retrieveTranslatorResponse() {
         try {
-            //form uri
-            String term = URLEncoder.encode(reference, StandardCharsets.UTF_8);
-            String bibleVersion = URLEncoder.encode(this.vers, StandardCharsets.UTF_8);
-            String query = String.format("?source=en&target=%sTHELANGUAGE&q=&s", asdf, bibleVerse);
-            String uri = BIBLE_API + query;
 
-            System.out.println(uri);
+            //form uri
+
+            String language = "";
+
+            if (transBox.getLanguage().equals("English")) {
+                language = "en";
+            } else if (transBox.getLanguage().equals("Spanish")) {
+                language = "es";
+            } else if (transBox.getLanguage().equals("Chinese")) {
+                language = "zh";
+            } else if (transBox.getLanguage().equals("French")) {
+                language = "fr";
+            } else if (transBox.getLanguage().equals("Hindi")) {
+                language = "hi";
+            } else {
+                language = "ar";
+            }
+
+            bibleVerse = bibleVerse.replace("\n", " ");
+
+            String query = String.format
+                ("{\"q\":\"%s\",\"source\":\"en\",\"target\":\"%s\",\"format\":\"text\",\"api_key\":\"%s\"}",
+                bibleVerse, language, KEY);
+
+            System.out.print(query);
 
             //build request
             HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(uri))
+                .uri(URI.create(TRANSLATOR_API))
+                .header("Content-Type", "application/json")
+                .POST(HttpRequest.BodyPublishers.ofString(query))
                 .build();
             HttpResponse<String> response = HTTP_CLIENT
                 .send(request, BodyHandlers.ofString());
@@ -173,8 +219,8 @@ public class ApiApp extends Application {
             System.out.println("********** RAW JSON STRING: **********");
             System.out.println(jsonString.trim());
             // parse the JSON-formatted string using GSON
-            this.bRes = GSON
-                .fromJson(jsonString, BibleResponse.class);
+            this.tRes = GSON
+                .fromJson(jsonString, TranslatorResponse.class);
         } catch (IOException | InterruptedException e) {
             System.out.println("Hi");
         }

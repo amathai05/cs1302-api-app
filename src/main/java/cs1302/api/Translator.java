@@ -36,9 +36,10 @@ public class Translator extends HBox {
             "Chinese",
             "French",
             "Hindi",
-            "Arabic",
-            "Spanish"
+            "Arabic"
             );
+
+        languages.setValue("English");
 
         //set children
         this.getChildren().addAll(translate, statement, languages);
