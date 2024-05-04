@@ -96,30 +96,26 @@ public class ApiApp extends Application {
     public void start(Stage stage) {
         try {
             transBox.translate.setDisable(true);
-
             bar.search.setOnAction(event -> {
-                vers = bar.getVersion();
+                try {
 
-                reference = bar.getReference();
+                    vers = bar.getVersion();
+                    reference = bar.getReference();
 
-                if (reference == null) {
-                    throw new IllegalArgumentException("Please enter a proper reference");
-                } else {
+                    if (reference == null) {
+                        throw new IllegalArgumentException("Please enter a proper reference");
+                    } else {
+                        retrieveBibleResponse();
 
-                    retrieveBibleResponse();
-
-//                    if (this.bRes == null) {
-//                        throw new IllegalArgumentException("Please enter a proper reference");
-//                    } else {
-
+                        if (this.bRes.text == null) {
+                            throw new IllegalArgumentException("Please enter a proper reference");
+                        }
                         bibleVerse = this.bRes.text;
-
-                        System.out.println(bibleVerse);
-
                         verse.setText(this.bRes.text);
-
                         transBox.translate.setDisable(false);
-//                    }
+                    }
+                } catch (IllegalArgumentException | NullPointerException e) {
+                    alertError("The reference is invalid. Please retype ");
                 }
             });
 
@@ -129,23 +125,16 @@ public class ApiApp extends Application {
                 retrieveTranslatorResponse();
 
                 if (bibleVerse == null) {
-                    throw new IllegalArgumentException("Please Enter a reference before translating");
+                    throw new IllegalArgumentException("Please Enter a reference" +
+                    " before translating");
                 } else {
                     transText.setText(this.tRes.translatedText);
                 }
             });
-        } catch (IllegalArgumentException | JsonSyntaxException e) {
+        } catch (IllegalArgumentException | JsonSyntaxException | NullPointerException e) {
             alertError(e);
         }
-
         this.stage = stage;
-
-        // demonstrate how to load local asset using "file:resources/"
-        Image bannerImage = new Image("file:resources/readme-banner.png");
-        ImageView banner = new ImageView(bannerImage);
-        banner.setPreserveRatio(true);
-        banner.setFitWidth(640);
-
         // some labels to display information
         Label howToUse = new Label("Enter a reference! Example: \"1 John 3:16\" or \"Psalm 23\"");
         Label notice = new Label("Thank you to LibreTranslate & bible-api.com!");
@@ -160,9 +149,13 @@ public class ApiApp extends Application {
         stage.sizeToScene();
         stage.show();
         this.stage.setResizable(false);
-
     } // start
 
+    /**
+     * This takes a bible reference and  creates a request to send to
+     * the server. The client sends the request and retrieves the
+     * response from the server.  The response is encoded as a JSON object.
+     */
     public void retrieveBibleResponse() {
         try {
             //form uri
@@ -194,13 +187,20 @@ public class ApiApp extends Application {
             // parse the JSON-formatted string using GSON
             this.bRes = GSON
                 .fromJson(jsonString, BibleResponse.class);
-        } catch (IOException | InterruptedException | IllegalStateException e) {
+        } catch (IOException | InterruptedException | IllegalStateException |
+            JsonSyntaxException e) {
+
             alertError(e);
             System.out.println("189");
         }
     }
 
 
+    /**
+     * This takes the bible verse and  creates a request to send
+     * to the server. The client  sends the request and retrieves
+     * the response from the server. The response is encoded as a JSON object.
+     */
     public void retrieveTranslatorResponse() {
         try {
 
@@ -225,7 +225,8 @@ public class ApiApp extends Application {
             bibleVerse = bibleVerse.replace("\n", " ");
 
             String query = String.format
-                ("{\"q\":\"%s\",\"source\":\"en\",\"target\":\"%s\",\"format\":\"text\",\"api_key\":\"%s\"}",
+                ("{\"q\":\"%s\",\"source\":\"en\",\"target\""
+                + ":\"%s\",\"format\":\"text\",\"api_key\":\"%s\"}",
                 bibleVerse, language, KEY);
 
             System.out.print(query);
@@ -250,11 +251,16 @@ public class ApiApp extends Application {
                 .fromJson(jsonString, TranslatorResponse.class);
         } catch (IOException | InterruptedException e) {
             alertError(e);
-            System.out.println("242");
         }
     }
 
-
+    /**
+     * Set up the alertError popup.
+     * Takes in the exception {@code cause} and also the {@code link}
+     * that caused the exception to occur allowing it to properly send an error.
+     *
+     *@param cause exeception that occurs.
+     */
     public static void alertError(Throwable cause) {
         TextArea text = new TextArea("Exception: " + cause.getMessage());
         text.setEditable(false);
@@ -264,6 +270,22 @@ public class ApiApp extends Application {
         alert.showAndWait();
     }
 
+
+        /**
+     * Set up the alertError popup.
+     * Takes in the exception {@code cause} and also the {@code link}
+     * that caused the exception to occur allowing it to properly send an error.
+     *
+     *@param error exeception message.
+     */
+    public static void alertError(String error) {
+        TextArea text = new TextArea("Exception: " + error);
+        text.setEditable(false);
+        Alert alert = new Alert(AlertType.ERROR);
+        alert.getDialogPane().setContent(text);
+        alert.setResizable(true);
+        alert.showAndWait();
+    }
 
 
 } // ApiApp
