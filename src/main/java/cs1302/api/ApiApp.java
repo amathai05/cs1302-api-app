@@ -22,6 +22,9 @@ import java.io.IOException;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import java.io.IOException;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Alert.AlertType;
+import com.google.gson.JsonSyntaxException;
 
 import cs1302.api.TopBar;
 import cs1302.api.Translator;
@@ -91,32 +94,49 @@ public class ApiApp extends Application {
     /** {@inheritDoc} */
     @Override
     public void start(Stage stage) {
+        try {
+            transBox.translate.setDisable(true);
 
-        bar.search.setOnAction(event -> {
-            vers = bar.getVersion();
-            reference = bar.getReference();
+            bar.search.setOnAction(event -> {
+                vers = bar.getVersion();
 
-            retrieveBibleResponse();
+                reference = bar.getReference();
 
-            bibleVerse = this.bRes.text;
+                if (reference == null) {
+                    throw new IllegalArgumentException("Please enter a proper reference");
+                } else {
 
-            System.out.println(bibleVerse);
+                    retrieveBibleResponse();
 
-            verse.setText(this.bRes.text);
-        });
+//                    if (this.bRes == null) {
+//                        throw new IllegalArgumentException("Please enter a proper reference");
+//                    } else {
 
-        transBox.translate.setOnAction(event -> {
+                        bibleVerse = this.bRes.text;
 
-            System.out.println(bibleVerse);
+                        System.out.println(bibleVerse);
 
-            retrieveTranslatorResponse();
+                        verse.setText(this.bRes.text);
 
-            System.out.println(this.tRes.translatedText);
+                        transBox.translate.setDisable(false);
+//                    }
+                }
+            });
 
-            transText.setText(this.tRes.translatedText);
+            transBox.translate.setOnAction(event -> {
 
-        });
+                System.out.println(bibleVerse);
+                retrieveTranslatorResponse();
 
+                if (bibleVerse == null) {
+                    throw new IllegalArgumentException("Please Enter a reference before translating");
+                } else {
+                    transText.setText(this.tRes.translatedText);
+                }
+            });
+        } catch (IllegalArgumentException | JsonSyntaxException e) {
+            alertError(e);
+        }
 
         this.stage = stage;
 
@@ -132,13 +152,14 @@ public class ApiApp extends Application {
         // setup scene
         root.getChildren().addAll(bar, howToUse, verse, transBox, transText, notice);
         scene = new Scene(root);
-
+        root.setAlignment(javafx.geometry.Pos.CENTER);
         // setup stage
         stage.setTitle("ApiApp!");
         stage.setScene(scene);
         stage.setOnCloseRequest(event -> Platform.exit());
         stage.sizeToScene();
         stage.show();
+        this.stage.setResizable(false);
 
     } // start
 
@@ -160,7 +181,7 @@ public class ApiApp extends Application {
                 .send(request, BodyHandlers.ofString());
             //response code 200
             if (response.statusCode() != 200) {
-                throw new IOException(response.toString());
+                throw new IOException("Invalid Reference. Please Retype");
             }
             String jsonString = response.body();
             System.out.println("********** RAW JSON STRING: **********");
@@ -168,8 +189,9 @@ public class ApiApp extends Application {
             // parse the JSON-formatted string using GSON
             this.bRes = GSON
                 .fromJson(jsonString, BibleResponse.class);
-        } catch (IOException | InterruptedException e) {
-            System.out.println("Hi");
+        } catch (IOException | InterruptedException | IllegalStateException e) {
+            alertError(e);
+            System.out.println("189");
         }
     }
 
@@ -222,9 +244,21 @@ public class ApiApp extends Application {
             this.tRes = GSON
                 .fromJson(jsonString, TranslatorResponse.class);
         } catch (IOException | InterruptedException e) {
-            System.out.println("Hi");
+            alertError(e);
+            System.out.println("242");
         }
     }
+
+
+    public static void alertError(Throwable cause) {
+        TextArea text = new TextArea("Exception: " + cause.getMessage());
+        text.setEditable(false);
+        Alert alert = new Alert(AlertType.ERROR);
+        alert.getDialogPane().setContent(text);
+        alert.setResizable(true);
+        alert.showAndWait();
+    }
+
 
 
 } // ApiApp

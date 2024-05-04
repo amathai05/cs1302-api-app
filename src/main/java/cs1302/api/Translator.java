@@ -26,7 +26,7 @@ public class Translator extends HBox {
 
         //instantiate
         translate = new Button("Translate");
-        statement = new Label("Translate to");
+        statement = new Label("Translate To:");
         languages = new ComboBox<String>();
 
         //combobox
@@ -37,12 +37,15 @@ public class Translator extends HBox {
             "French",
             "Hindi",
             "Arabic"
-            );
+        );
 
         languages.setValue("English");
 
         //set children
         this.getChildren().addAll(translate, statement, languages);
+
+        this.setSpacing(150);
+        this.setAlignment(javafx.geometry.Pos.CENTER);
     }
 
     /**
